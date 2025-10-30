@@ -1,0 +1,8 @@
+name = "chatgpt-clone-proxy"
+main = "worker.js"
+compatibility_date = "2024-10-01"
+
+[vars]
+# No plaintext vars here; set OPENAI_API_KEY via dashboard or wrangler secret
+
+
