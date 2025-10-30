@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatGPT Clone</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    .app { display: grid; grid-template-rows: 1fr auto; height: 100dvh; }
+    header { padding: 12px 16px; border-bottom: 1px solid #3333; font-weight: 600; }
+    #messages { padding: 16px; overflow: auto; display: grid; gap: 12px; }
+    .msg { max-width: 900px; padding: 12px 14px; border-radius: 12px; white-space: pre-wrap; line-height: 1.5; }
+    .user { margin-left: auto; background: #2563eb; color: white; }
+    .assistant { margin-right: auto; background: #1112; }
+    form { display: flex; gap: 10px; padding: 12px; border-top: 1px solid #3333; }
+    textarea { flex: 1; resize: none; min-height: 48px; max-height: 160px; padding: 10px; border-radius: 10px; border: 1px solid #3333; }
+    button { padding: 10px 14px; border-radius: 10px; border: 1px solid #3333; background: #1111; cursor: pointer; }
+    .muted { opacity: 0.7; font-size: 12px; }
+  </style>
+  <script src="./config.js"></script>
+  <script>
+    const state = { messages: [{ role: 'system', content: 'You are a helpful assistant.' }] };
+
+    async function sendMessage(event) {
+      event.preventDefault();
+      const input = document.getElementById('input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      append('user', text);
+      input.value = '';
+
+      state.messages.push({ role: 'user', content: text });
+      setLoading(true);
+      try {
+        const base = (window.API_BASE || '').replace(/\/$/, '');
+        const url = base ? `${base}/api/chat` : '/api/chat';
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: state.messages })
+        });
+        const data = await res.json();
+        const reply = data.reply || '(no response)';
+        state.messages.push({ role: 'assistant', content: reply });
+        append('assistant', reply);
+      } catch (e) {
+        append('assistant', 'Error: failed to reach the server.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function append(role, text) {
+      const container = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.textContent = text;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function setLoading(loading) {
+      const btn = document.getElementById('send');
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Thinking…' : 'Send';
+    }
+  </script>
+  <meta name="description" content="Simple local ChatGPT-like UI">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+  </head>
+<body>
+  <div class="app">
+    <header>ChatGPT Clone <span class="muted">(local, via OpenAI API)</span></header>
+    <main id="messages"></main>
+    <form onsubmit="sendMessage(event)">
+      <textarea id="input" placeholder="Type your message…" required></textarea>
+      <button id="send" type="submit">Send</button>
+    </form>
+  </div>
+</body>
+</html>
+
+
